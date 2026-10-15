@@ -1,0 +1,90 @@
+/* FoodBridge design system: green & white, accessible contrast, system font stack */
+:root {
+  --fb-green-900: #123d17;
+  --fb-green-800: #1b5e20;
+  --fb-green-700: #2e7d32;
+  --fb-green-600: #388e3c;
+  --fb-green-100: #e8f5e9;
+  --fb-green-50: #f4faf5;
+  --fb-amber: #f9a825;
+  --fb-ink: #1c2b1f;
+  --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bs-body-color: var(--fb-ink);
+  --bs-link-color: var(--fb-green-700);
+  --bs-link-hover-color: var(--fb-green-900);
+  --bs-border-radius: .6rem;
+  --bs-success: var(--fb-green-700);
+  --bs-success-rgb: 46, 125, 50;
+}
+body { background: var(--fb-green-50); }
+h1, h2, h3, h4, h5 { letter-spacing: -.01em; }
+
+.skip-link { position: absolute; left: .5rem; top: .5rem; z-index: 2000; background: #fff; padding: .5rem 1rem; border-radius: .5rem; }
+:focus-visible { outline: 3px solid #ffb300; outline-offset: 2px; }
+
+/* Buttons */
+.btn-success { --bs-btn-bg: var(--fb-green-700); --bs-btn-border-color: var(--fb-green-700);
+  --bs-btn-hover-bg: var(--fb-green-800); --bs-btn-hover-border-color: var(--fb-green-800);
+  --bs-btn-active-bg: var(--fb-green-900); --bs-btn-active-border-color: var(--fb-green-900);
+  --bs-btn-disabled-bg: var(--fb-green-600); --bs-btn-disabled-border-color: var(--fb-green-600); }
+.btn-outline-success { --bs-btn-color: var(--fb-green-700); --bs-btn-border-color: var(--fb-green-700);
+  --bs-btn-hover-bg: var(--fb-green-700); --bs-btn-hover-border-color: var(--fb-green-700);
+  --bs-btn-active-bg: var(--fb-green-800); }
+.text-bg-success { background-color: var(--fb-green-700) !important; }
+.page-link { color: var(--fb-green-700); }
+.page-item.active .page-link { background: var(--fb-green-700); border-color: var(--fb-green-700); }
+.nav-pills .nav-link.active { background: var(--fb-green-700); }
+.form-check-input:checked { background-color: var(--fb-green-700); border-color: var(--fb-green-700); }
+
+/* Navbar & footer */
+.fb-navbar { background: #fff; border-bottom: 1px solid #dcebdd; }
+.fb-navbar .navbar-brand { font-weight: 700; color: var(--fb-green-800); }
+.fb-navbar .nav-link.active { color: var(--fb-green-800); font-weight: 600; box-shadow: inset 0 -2px 0 var(--fb-green-700); }
+.fb-footer { background: var(--fb-green-900); color: #d7ead9; }
+.fb-footer a { color: #a5d6a7; }
+
+/* Hero */
+.hero { background: linear-gradient(135deg, var(--fb-green-900) 0%, var(--fb-green-700) 70%, #43a047 100%); color: #fff; padding-bottom: 3rem; }
+.hero-pill { background: rgba(255,255,255,.16); font-weight: 500; padding: .5em 1em; border-radius: 99px; }
+.hero-card { border: 0; color: var(--fb-ink); }
+.mt-n4 { margin-top: -2rem; }
+
+/* Cards */
+.card { border: 1px solid #dcebdd; border-radius: .9rem; box-shadow: 0 1px 2px rgba(20, 60, 25, .05); }
+.stat-card { border-left: 5px solid var(--fb-green-700); }
+.stat-card.stat-amber { border-left-color: var(--fb-amber); }
+.stat-value { font-size: 2rem; font-weight: 700; line-height: 1.1; color: var(--fb-green-800); }
+.stat-label { color: #4a5d4d; font-weight: 500; }
+.listing-card { transition: transform .15s ease, box-shadow .15s ease; }
+.listing-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(20, 60, 25, .12); }
+.listing-qty { font-size: 1.25rem; font-weight: 700; color: var(--fb-green-800); }
+.step-card .step-no { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--fb-green-100); color: var(--fb-green-800);
+  display: grid; place-items: center; font-weight: 700; margin-bottom: .75rem; }
+.filter-card { background: #fff; }
+.safety-banner { background: #fff8e1; border: 1px solid #ffe082; border-left: 5px solid var(--fb-amber); border-radius: .6rem; padding: .85rem 1rem; }
+.empty-state .empty-icon { font-size: 2.5rem; }
+
+/* Badges */
+.category-badge { background: var(--fb-green-100); color: var(--fb-green-800); font-weight: 600; }
+.status-badge { font-weight: 600; }
+.status-available, .status-completed { background: #c8e6c9; color: #1b5e20; }
+.status-requested, .status-pending { background: #fff3cd; color: #7a5200; }
+.status-approved, .status-open { background: #d0e8ff; color: #0b4a85; }
+.status-collected { background: #e1d5f7; color: #4a2c85; }
+.status-cancelled, .status-expired, .status-dismissed { background: #e4e7e4; color: #404840; }
+.status-rejected { background: #f8d7da; color: #842029; }
+.status-resolved { background: #c8e6c9; color: #1b5e20; }
+
+/* Details, timeline, lists */
+.detail-list { display: grid; grid-template-columns: 11rem 1fr; gap: .5rem 1rem; }
+.detail-list dt { color: #4a5d4d; font-weight: 600; }
+.detail-list dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 575.98px) { .detail-list { grid-template-columns: 1fr; gap: 0; } .detail-list dd { margin-bottom: .6rem; } }
+.unit-list li { padding: .2rem 0; }
+.request-item { border: 1px solid #e3eee4; border-radius: .7rem; padding: .85rem; margin-bottom: .75rem; background: #fcfffc; }
+.timeline { border-left: 2px solid #c8e6c9; margin-left: .4rem; padding-left: 1rem; }
+.timeline li { position: relative; padding-bottom: .75rem; }
+.timeline-dot { position: absolute; left: -1.42rem; top: .3rem; width: .75rem; height: .75rem; background: var(--fb-green-700); border-radius: 50%; }
+.chart-box { position: relative; height: 280px; }
+.table > :not(caption) > * > * { padding-top: .7rem; padding-bottom: .7rem; }
+.table thead th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #4a5d4d; }

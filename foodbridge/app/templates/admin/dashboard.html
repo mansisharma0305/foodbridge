@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stat_card, unit_list, status_badge %}
+{% block title %}Admin overview{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="h2">Admin dashboard</h1>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">{{ stat_card(o.total_users, "Total users", "Donors " ~ o.users.get('donor', 0) ~ " · Recipients " ~ o.users.get('recipient', 0) ~ " · Admins " ~ o.users.get('admin', 0)) }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(o.total_listings, "Total listings") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(o.pending_requests, "Pending requests", tone="amber") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(o.completed, "Completed donations") }}</div>
+  </div>
+  <div class="row g-4">
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h5">Listings by status</h2>
+      <div class="chart-box"><canvas id="statusChart" data-chart="bar" data-source="statusData" role="img" aria-label="Bar chart of listings by status"></canvas></div>
+      <p class="chart-fallback text-secondary small" hidden>Chart unavailable offline. {% for s, c in o.listings.items() %}{{ s|status_label }}: {{ c }}{{ '; ' if not loop.last }}{% endfor %}</p>
+      <script type="application/json" id="statusData">{{ status_chart|tojson }}</script>
+    </div></div></div>
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h5">Quantities (never mixed across units)</h2>
+      <div class="row">
+        <div class="col-sm-6"><h3 class="h6 text-secondary">Listed (excluding cancelled)</h3>
+          {% if o.listed_by_unit %}<ul class="list-unstyled unit-list">{% for u in o.listed_by_unit %}<li><strong>{{ u.total|qty }} {{ u.unit }}</strong> <span class="text-secondary small">in {{ u.count }} listing{{ 's' if u.count != 1 }}</span></li>{% endfor %}</ul>{% else %}<p class="text-secondary">No listings yet.</p>{% endif %}</div>
+        <div class="col-sm-6"><h3 class="h6 text-secondary">Redistributed (completed)</h3>{{ unit_list(o.redistributed_by_unit, "None yet.") }}</div>
+      </div>
+    </div></div></div>
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h5">Requests by status</h2>
+      <table class="table table-sm mb-0"><tbody>
+        {% for s in constants.REQUEST_STATUSES %}<tr><td>{{ status_badge(s) }}</td><td class="text-end">{{ o.requests.get(s, 0) }}</td></tr>{% endfor %}
+      </tbody></table>
+    </div></div></div>
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <div class="d-flex justify-content-between"><h2 class="h5">Open reports ({{ o.open_reports }})</h2><a href="{{ url_for('admin.reports') }}">View all</a></div>
+      {% if recent_reports %}
+        <ul class="list-group list-group-flush">
+          {% for r in recent_reports %}<li class="list-group-item px-0"><strong>{{ r.category_label }}</strong> · <span class="small text-secondary">{{ r.reporter.display_name }}, {{ r.created_at|dt }}</span><br><span class="small">{{ r.description|truncate(110) }}</span></li>{% endfor %}
+        </ul>
+      {% else %}<p class="text-secondary mb-0">No open reports. 🎉</p>{% endif %}
+      <p class="small text-secondary mt-3 mb-0">Deactivated accounts: {{ o.inactive_users }}</p>
+    </div></div></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

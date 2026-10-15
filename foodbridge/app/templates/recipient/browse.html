@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_macros.html" import listing_card, render_pagination, empty_state, render_field %}
+{% block title %}Find food{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="h2">Find available food</h1>
+  <p class="text-secondary">Exact pickup address and contact phone are shared only after a donor approves your request.</p>
+
+  <form method="get" class="card filter-card mb-4" aria-label="Search and filter listings">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4"><label class="form-label small fw-semibold" for="q">Food name</label>{{ form.q(class="form-control", placeholder="e.g. biryani, bread") }}</div>
+        <div class="col-md-4"><label class="form-label small fw-semibold" for="category">Category</label>{{ form.category(class="form-select") }}</div>
+        <div class="col-md-4"><label class="form-label small fw-semibold" for="city">Location</label>{{ form.city(class="form-control", placeholder="City or area") }}</div>
+        <div class="col-6 col-md-3"><label class="form-label small fw-semibold" for="unit">Unit</label>{{ form.unit(class="form-select") }}</div>
+        <div class="col-6 col-md-3"><label class="form-label small fw-semibold" for="min_quantity">Min. quantity</label>{{ form.min_quantity(class="form-control" ~ (" is-invalid" if form.min_quantity.errors else ""), min="0") }}</div>
+        <div class="col-md-3"><label class="form-label small fw-semibold" for="availability">Availability</label>{{ form.availability(class="form-select") }}</div>
+        <div class="col-md-3"><label class="form-label small fw-semibold" for="sort">Sort by</label>{{ form.sort(class="form-select") }}</div>
+      </div>
+      {% for field in (form.q, form.city, form.min_quantity, form.category, form.unit) %}
+        {% for error in field.errors %}<div class="text-danger small mt-2">{{ error }}</div>{% endfor %}
+      {% endfor %}
+      <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-success" type="submit">Search</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('recipient.browse') }}">Clear filters</a>
+      </div>
+    </div>
+  </form>
+
+  <p class="text-secondary small" aria-live="polite">{{ pagination.total }} listing{{ 's' if pagination.total != 1 }} found</p>
+  {% if pagination.items %}
+    <div class="row g-3">
+      {% for d in pagination.items %}<div class="col-md-6 col-lg-4">{{ listing_card(d) }}</div>{% endfor %}
+    </div>
+    {{ render_pagination(pagination, 'recipient.browse', query_args) }}
+  {% else %}
+    {{ empty_state("No matching food right now", "Try clearing some filters or check back soon. New surplus is posted every day.", url_for('recipient.browse'), "Clear filters") }}
+  {% endif %}
+</div>
+{% endblock %}

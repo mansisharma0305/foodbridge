@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field, render_check %}
+{% block title %}Create account{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+  <h1 class="h2 mb-1">Join FoodBridge</h1>
+  <p class="text-secondary">Admin accounts cannot be created here; they are provisioned by the system owner.</p>
+  <div class="card"><div class="card-body p-4">
+    <form method="post" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      {{ render_field(form.role) }}
+      <div class="row">
+        <div class="col-md-6">{{ render_field(form.name, autocomplete="name") }}</div>
+        <div class="col-md-6">{{ render_field(form.email, autocomplete="email") }}</div>
+        <div class="col-md-6">{{ render_field(form.organization) }}</div>
+        <div class="col-md-6">{{ render_field(form.org_type) }}</div>
+        <div class="col-md-6">{{ render_field(form.phone, help="Shared with a counterpart only after a request is approved.", autocomplete="tel") }}</div>
+        <div class="col-md-6">{{ render_field(form.city) }}</div>
+        <div class="col-12">{{ render_field(form.address) }}</div>
+        <div class="col-md-6">{{ render_field(form.password, help="At least 8 characters, with a letter and a number.", autocomplete="new-password") }}</div>
+        <div class="col-md-6">{{ render_field(form.confirm, autocomplete="new-password") }}</div>
+      </div>
+      {{ render_check(form.accept_guidance) }}
+      {{ form.submit(class="btn btn-success w-100") }}
+    </form>
+  </div></div>
+  <p class="text-center mt-3">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field, render_check %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 460px;">
+  <h1 class="h2 mb-3">Welcome back</h1>
+  <div class="card"><div class="card-body p-4">
+    <form method="post" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      {{ render_field(form.email, autocomplete="email", autofocus=true) }}
+      {{ render_field(form.password, autocomplete="current-password") }}
+      {{ render_check(form.remember) }}
+      {{ form.submit(class="btn btn-success w-100") }}
+    </form>
+  </div></div>
+  <p class="text-center mt-3">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+</div>
+{% endblock %}

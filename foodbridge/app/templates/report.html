@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field %}
+{% block title %}Report an issue{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 640px;">
+  <h1 class="h2">Report an issue</h1>
+  <p class="text-secondary">Administrators review every report. For an urgent food-safety emergency, contact local health authorities first.</p>
+  {% if donation %}<div class="alert alert-info">About listing: <strong>{{ donation.food_name }}</strong> (#{{ donation.id }})</div>{% endif %}
+  <div class="card"><div class="card-body">
+    <form method="post" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      {{ render_field(form.category) }}
+      {{ render_field(form.description, help="Do not include passwords or financial details.") }}
+      {{ form.submit(class="btn btn-success") }}
+    </form>
+  </div></div>
+</div>
+{% endblock %}

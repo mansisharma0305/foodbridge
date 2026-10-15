@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, sample_badge, post_button, timeline %}
+{% block title %}Request #{{ req.id }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+  <a href="{{ url_for('recipient.dashboard') }}" class="small">← My requests</a>
+  <h1 class="h2 mt-2">{{ donation.food_name }}{{ sample_badge(donation) }}</h1>
+  <p>Request status: {{ status_badge(req.status) }} <span class="text-secondary small ms-2">Listing: {{ status_badge(donation.status) }}</span></p>
+
+  {% if req.status == 'expired' %}<div class="alert alert-secondary"><strong>Expired.</strong> The pickup deadline passed before this pickup was completed.</div>{% endif %}
+  {% if req.status == 'rejected' %}<div class="alert alert-danger">The donor declined this request.{% if req.response_note %} Reason: {{ req.response_note }}{% endif %}</div>{% endif %}
+  {% if req.status == 'cancelled' and req.response_note %}<div class="alert alert-secondary">{{ req.response_note }}</div>{% endif %}
+
+  <div class="row g-4">
+    <div class="col-md-7">
+      <div class="card"><div class="card-body">
+        <h2 class="h5">Food details</h2>
+        <dl class="detail-list mb-0">
+          <dt>Quantity</dt><dd>{{ donation.quantity|qty }} {{ donation.unit }}</dd>
+          <dt>Category</dt><dd>{{ donation.category }}</dd>
+          <dt>Donor</dt><dd>{{ donation.donor.display_name }}</dd>
+          <dt>Prepared / acquired</dt><dd>{{ donation.prepared_at|dt }}</dd>
+          <dt>Pickup deadline</dt><dd>{{ donation.pickup_deadline|dt }}</dd>
+          <dt>Handling notes</dt><dd>{{ donation.handling_notes or "None provided" }}</dd>
+          {% if req.contact_visible %}
+            <dt>Pickup address</dt><dd>{{ donation.pickup_location }}</dd>
+            <dt>Donor contact</dt><dd>{{ donation.donor.name }}, {{ donation.contact_phone }}</dd>
+          {% else %}
+            <dt>Pickup address</dt><dd class="text-secondary">Shared after the donor approves your request.</dd>
+          {% endif %}
+          {% if req.note %}<dt>Your message</dt><dd>{{ req.note }}</dd>{% endif %}
+        </dl>
+      </div></div>
+    </div>
+    <div class="col-md-5">
+      <div class="card mb-3"><div class="card-body">
+        <h2 class="h5">Timeline</h2>
+        {{ timeline(req) }}
+      </div></div>
+      <div class="card"><div class="card-body">
+        <h2 class="h5">Actions</h2>
+        {% if req.status in ('pending', 'approved') %}
+          {{ post_button(url_for('recipient.request_action', request_id=req.id, action='cancel'), 'Cancel request', 'btn btn-outline-danger', confirm='Cancel this request? The listing will become available to others.') }}
+        {% endif %}
+        {% if req.status == 'collected' %}
+          <p class="small text-secondary">The donor marked this food as handed over. Confirm once you have received it.</p>
+          {{ post_button(url_for('recipient.request_action', request_id=req.id, action='complete'), 'Confirm received', 'btn btn-success') }}
+        {% endif %}
+        {% if req.status == 'approved' %}<p class="small text-secondary mt-2 mb-0">Collect before {{ donation.pickup_deadline|dt }}. The donor marks the food as collected at handover.</p>{% endif %}
+        {% if req.status in ('completed', 'rejected', 'cancelled', 'expired') %}<p class="text-secondary mb-0">No further actions available.</p>{% endif %}
+        <hr><a class="small" href="{{ url_for('main.report', donation_id=donation.id) }}">Report an issue</a>
+      </div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

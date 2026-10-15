@@ -1,0 +1,113 @@
+{# Reusable UI pieces. Statuses are styled by .status-<name> classes in style.css #}
+
+{% macro status_badge(status) -%}
+  <span class="badge status-badge status-{{ status }}">{{ status|status_label }}</span>
+{%- endmacro %}
+
+{% macro sample_badge(obj) -%}
+  {% if obj.is_sample %}<span class="badge text-bg-warning ms-1" title="Demo data, not a real donation">Sample</span>{% endif %}
+{%- endmacro %}
+
+{% macro render_field(field, help=None) %}
+  <div class="mb-3">
+    {{ field.label(class="form-label fw-semibold") }}{% if field.flags.required %}<span class="text-danger" aria-hidden="true"> *</span>{% endif %}
+    {% if field.type == 'SelectField' %}
+      {{ field(class="form-select" ~ (" is-invalid" if field.errors else ""), **kwargs) }}
+    {% elif field.type == 'TextAreaField' %}
+      {{ field(class="form-control" ~ (" is-invalid" if field.errors else ""), rows=3, **kwargs) }}
+    {% else %}
+      {{ field(class="form-control" ~ (" is-invalid" if field.errors else ""), **kwargs) }}
+    {% endif %}
+    {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro render_check(field) %}
+  <div class="form-check mb-3">
+    {{ field(class="form-check-input" ~ (" is-invalid" if field.errors else "")) }}
+    {{ field.label(class="form-check-label") }}
+    {% for error in field.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+  </div>
+{% endmacro %}
+
+{# A POST button with CSRF token and optional confirmation #}
+{% macro post_button(url, label, cls="btn btn-sm btn-outline-secondary", confirm=None, fields=None) %}
+  <form method="post" action="{{ url }}" class="d-inline" data-loading{% if confirm %} data-confirm="{{ confirm }}"{% endif %}>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if fields %}{% for k, v in fields.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}{% endif %}
+    <button type="submit" class="{{ cls }}">{{ label }}</button>
+  </form>
+{% endmacro %}
+
+{% macro stat_card(value, label, hint=None, tone="green") %}
+  <div class="card stat-card stat-{{ tone }} h-100">
+    <div class="card-body">
+      <div class="stat-value">{{ value }}</div>
+      <div class="stat-label">{{ label }}</div>
+      {% if hint %}<div class="small text-secondary mt-1">{{ hint }}</div>{% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro unit_list(units, empty="Nothing completed yet.") %}
+  {# Each unit is shown separately: kg, servings and packets are never added together. #}
+  {% if units %}
+    <ul class="list-unstyled mb-0 unit-list">
+      {% for u in units %}
+        <li><strong>{{ u.total|qty }} {{ u.unit }}</strong> <span class="text-secondary">across {{ u.count }} donation{{ 's' if u.count != 1 }}</span></li>
+      {% endfor %}
+    </ul>
+  {% else %}<p class="text-secondary mb-0">{{ empty }}</p>{% endif %}
+{% endmacro %}
+
+{% macro render_pagination(p, endpoint, query_args) %}
+  {% if p.pages > 1 %}
+  <nav aria-label="Pagination" class="mt-3">
+    <ul class="pagination justify-content-center mb-0">
+      <li class="page-item {{ 'disabled' if not p.has_prev }}"><a class="page-link" href="{{ url_for(endpoint, page=p.prev_num, **query_args) if p.has_prev else '#' }}">Previous</a></li>
+      {% for n in range(1, p.pages + 1) %}
+        <li class="page-item {{ 'active' if n == p.page }}"><a class="page-link" href="{{ url_for(endpoint, page=n, **query_args) }}">{{ n }}</a></li>
+      {% endfor %}
+      <li class="page-item {{ 'disabled' if not p.has_next }}"><a class="page-link" href="{{ url_for(endpoint, page=p.next_num, **query_args) if p.has_next else '#' }}">Next</a></li>
+    </ul>
+  </nav>
+  {% endif %}
+{% endmacro %}
+
+{% macro empty_state(title, text, link_url=None, link_label=None) %}
+  <div class="empty-state text-center py-5">
+    <div class="empty-icon" aria-hidden="true">🌱</div>
+    <h3 class="h5">{{ title }}</h3>
+    <p class="text-secondary mb-3">{{ text }}</p>
+    {% if link_url %}<a class="btn btn-success" href="{{ link_url }}">{{ link_label }}</a>{% endif %}
+  </div>
+{% endmacro %}
+
+{% macro listing_card(d) %}
+  <div class="card listing-card h-100">
+    <div class="card-body d-flex flex-column">
+      <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+        <span class="badge category-badge">{{ d.category }}</span>
+        {{ status_badge(d.status) }}
+      </div>
+      <h3 class="h5 card-title mb-1">{{ d.food_name }}{{ sample_badge(d) }}</h3>
+      <p class="listing-qty mb-2">{{ d.quantity|qty }} {{ d.unit }}</p>
+      <ul class="list-unstyled small text-secondary mb-3">
+        <li>📍 {{ d.city }}</li>
+        <li>🏢 {{ d.donor.display_name }}</li>
+        <li>⏰ Pickup by {{ d.pickup_deadline|dt }}
+          <span class="{{ 'text-danger fw-semibold' if d.pickup_deadline|hours_left < 2 else 'text-success' }}">({{ d.pickup_deadline|timeleft }})</span></li>
+      </ul>
+      <a class="btn btn-outline-success mt-auto stretched-link" href="{{ url_for('recipient.listing_detail', donation_id=d.id) }}">View details</a>
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro timeline(req) %}
+  <ol class="timeline list-unstyled mb-0">
+    {% for label, when in req.timeline %}
+      <li><span class="timeline-dot"></span><strong>{{ label }}</strong><br><span class="small text-secondary">{{ when|dt }}</span></li>
+    {% endfor %}
+  </ol>
+{% endmacro %}

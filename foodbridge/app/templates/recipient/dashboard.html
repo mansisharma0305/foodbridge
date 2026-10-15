@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, sample_badge, stat_card, unit_list, render_pagination, empty_state %}
+{% block title %}My requests{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div><h1 class="h2 mb-0">Hello, {{ current_user.display_name }}</h1><p class="text-secondary mb-0">Track your food requests and pickups.</p></div>
+    <a class="btn btn-success" href="{{ url_for('recipient.browse') }}">Find food</a>
+  </div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">{{ stat_card(counts.total, "Total requests") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(counts.pending, "Awaiting donor", tone="amber") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(counts.approved, "Approved / to collect") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(counts.completed, "Completed") }}</div>
+  </div>
+  <div class="row g-4">
+    <div class="col-lg-9">
+      <div class="card"><div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+          <h2 class="h5 mb-0">My requests</h2>
+          <form method="get" class="d-flex gap-2" aria-label="Filter requests">
+            <label for="status" class="visually-hidden">Status</label>
+            <select name="status" id="status" class="form-select form-select-sm">
+              <option value="">All statuses</option>
+              {% for s in constants.REQUEST_STATUSES %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s|status_label }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-sm btn-outline-success">Filter</button>
+          </form>
+        </div>
+        {% if pagination.items %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th scope="col">Food</th><th scope="col">Quantity</th><th scope="col">Status</th><th scope="col">Requested</th><th scope="col">Deadline</th><th></th></tr></thead>
+            <tbody>
+            {% for r in pagination.items %}
+              <tr>
+                <td>{{ r.donation.food_name }}{{ sample_badge(r.donation) }}<br><span class="small text-secondary">{{ r.donation.donor.display_name }}</span></td>
+                <td>{{ r.donation.quantity|qty }} {{ r.donation.unit }}</td>
+                <td>{{ status_badge(r.status) }}</td>
+                <td class="small">{{ r.created_at|dt }}</td>
+                <td class="small">{{ r.donation.pickup_deadline|dt }}</td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-success" href="{{ url_for('recipient.request_detail', request_id=r.id) }}">Open</a></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {{ render_pagination(pagination, 'recipient.dashboard', query_args) }}
+        {% else %}
+          {{ empty_state("No requests yet", "Browse available food and send your first request.", url_for('recipient.browse'), "Find food") }}
+        {% endif %}
+      </div></div>
+    </div>
+    <div class="col-lg-3"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 text-uppercase text-secondary">Received so far</h2>
+      {{ unit_list(units, "Completed pickups will appear here.") }}
+    </div></div></div>
+  </div>
+</div>
+{% endblock %}

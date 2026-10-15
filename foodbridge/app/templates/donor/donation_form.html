@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field, render_check %}
+{% block title %}{{ 'Edit listing' if editing else 'Post surplus food' }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 860px;">
+  <h1 class="h2">{{ 'Edit listing' if editing else 'Post surplus food' }}</h1>
+  <div class="safety-banner mb-3">Only list food that was handled safely. FoodBridge does not certify food. See the <a href="{{ url_for('main.food_safety') }}">food-safety guidance</a>.</div>
+  <div class="card"><div class="card-body p-4">
+    <form method="post" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      <div class="row">
+        <div class="col-md-6">{{ render_field(form.food_name) }}</div>
+        <div class="col-md-6">{{ render_field(form.category) }}</div>
+        <div class="col-md-6">{{ render_field(form.quantity, min="0.01", step="any") }}</div>
+        <div class="col-md-6">{{ render_field(form.unit, help="Each unit is tracked separately in impact statistics.") }}</div>
+        <div class="col-12">{{ render_field(form.description) }}</div>
+        <div class="col-md-6">{{ render_field(form.prepared_at) }}</div>
+        <div class="col-md-6">{{ render_field(form.pickup_deadline, help="Recipients cannot request after this time.") }}</div>
+        <div class="col-md-6">{{ render_field(form.pickup_location, help="Private: shown only to the recipient you approve.") }}</div>
+        <div class="col-md-6">{{ render_field(form.city) }}</div>
+        <div class="col-md-6">{{ render_field(form.contact_phone, help="Private: shown only after you approve a request.") }}</div>
+        <div class="col-12">{{ render_field(form.handling_notes) }}</div>
+      </div>
+      {{ render_check(form.safety_confirmed) }}
+      {{ form.submit(class="btn btn-success") }}
+      <a class="btn btn-link" href="{{ url_for('donor.donation_detail', donation_id=donation.id) if editing else url_for('donor.dashboard') }}">Cancel</a>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

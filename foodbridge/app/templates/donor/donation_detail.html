@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, sample_badge, post_button, timeline, empty_state %}
+{% block title %}{{ donation.food_name }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <a href="{{ url_for('donor.dashboard') }}" class="small">← Back to dashboard</a>
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
+    <div>
+      <h1 class="h2 mb-1">{{ donation.food_name }}{{ sample_badge(donation) }}</h1>
+      {{ status_badge(donation.status) }} <span class="badge category-badge">{{ donation.category }}</span>
+    </div>
+    <div class="d-flex gap-2">
+      {% if donation.can_edit %}<a class="btn btn-outline-success" href="{{ url_for('donor.edit_donation', donation_id=donation.id) }}">Edit</a>{% endif %}
+      {% if donation.can_cancel %}{{ post_button(url_for('donor.cancel_donation', donation_id=donation.id), 'Cancel listing', 'btn btn-outline-danger', confirm='Cancel this listing? Any open request will be cancelled.') }}{% endif %}
+    </div>
+  </div>
+
+  {% if donation.status == 'expired' %}
+    <div class="alert alert-secondary">This listing <strong>expired</strong> because the pickup deadline passed ({{ donation.pickup_deadline|dt }}). Post a new listing if the food is still safe and available.</div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card"><div class="card-body">
+        <h2 class="h5">Listing details</h2>
+        <dl class="detail-list mb-0">
+          <dt>Quantity</dt><dd>{{ donation.quantity|qty }} {{ donation.unit }}</dd>
+          <dt>Prepared / acquired</dt><dd>{{ donation.prepared_at|dt }}</dd>
+          <dt>Pickup deadline</dt><dd>{{ donation.pickup_deadline|dt }}{% if donation.status in ('available','requested','approved') %} <span class="text-success">({{ donation.pickup_deadline|timeleft }})</span>{% endif %}</dd>
+          <dt>Pickup address</dt><dd>{{ donation.pickup_location }}</dd>
+          <dt>Area</dt><dd>{{ donation.city }}</dd>
+          <dt>Contact phone</dt><dd>{{ donation.contact_phone }}</dd>
+          <dt>Description</dt><dd>{{ donation.description or "—" }}</dd>
+          <dt>Handling notes</dt><dd>{{ donation.handling_notes or "—" }}</dd>
+          <dt>Posted</dt><dd>{{ donation.created_at|dt }}</dd>
+        </dl>
+      </div></div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card"><div class="card-body">
+        <h2 class="h5">Requests</h2>
+        {% if donation.requests %}
+          {% for r in donation.requests|reverse %}
+          <div class="request-item">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <div>
+                <strong>{{ r.recipient.display_name }}</strong> {{ status_badge(r.status) }}<br>
+                <span class="small text-secondary">{{ r.recipient.org_type }} · {{ r.recipient.city }}</span>
+                {% if r.contact_visible %}<br><span class="small">📞 {{ r.recipient.phone }} · {{ r.recipient.name }}</span>{% endif %}
+                {% if r.note %}<p class="small mb-1 mt-2">“{{ r.note }}”</p>{% endif %}
+                {% if r.response_note %}<p class="small text-secondary mb-1">Note: {{ r.response_note }}</p>{% endif %}
+              </div>
+              <div class="text-nowrap">
+                {% if r.status == 'pending' %}
+                  {{ post_button(url_for('donor.request_action', request_id=r.id, action='approve'), 'Approve', 'btn btn-sm btn-success', fields={'return': 'detail'}) }}
+                {% elif r.status == 'approved' %}
+                  {{ post_button(url_for('donor.request_action', request_id=r.id, action='collect'), 'Mark collected', 'btn btn-sm btn-success', confirm='Confirm the food has been handed over?', fields={'return': 'detail'}) }}
+                {% elif r.status == 'collected' %}
+                  {{ post_button(url_for('donor.request_action', request_id=r.id, action='complete'), 'Mark completed', 'btn btn-sm btn-success', fields={'return': 'detail'}) }}
+                {% endif %}
+              </div>
+            </div>
+            {% if r.status == 'pending' %}
+            <form method="post" action="{{ url_for('donor.request_action', request_id=r.id, action='reject') }}" class="input-group input-group-sm mt-2" data-confirm="Reject this request?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="return" value="detail">
+              <label class="visually-hidden" for="reason{{ r.id }}">Reason (optional)</label>
+              <input class="form-control" id="reason{{ r.id }}" name="note" maxlength="300" placeholder="Reason for rejecting (optional)">
+              <button class="btn btn-outline-danger" type="submit">Reject</button>
+            </form>
+            {% endif %}
+            <details class="mt-2"><summary class="small text-secondary">Timeline</summary>{{ timeline(r) }}</details>
+          </div>
+          {% endfor %}
+        {% else %}
+          {{ empty_state("No requests yet", "Recipients can see this listing until the pickup deadline.") }}
+        {% endif %}
+      </div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, sample_badge, render_field %}
+{% block title %}{{ donation.food_name }}{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+  <a href="{{ url_for('recipient.browse') }}" class="small">← Back to listings</a>
+  <div class="card mt-2"><div class="card-body p-4">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div>
+        <span class="badge category-badge mb-2">{{ donation.category }}</span>
+        <h1 class="h2 mb-1">{{ donation.food_name }}{{ sample_badge(donation) }}</h1>
+        <p class="listing-qty">{{ donation.quantity|qty }} {{ donation.unit }}</p>
+      </div>
+      <div>{{ status_badge(donation.status) }}</div>
+    </div>
+
+    {% if donation.status == 'expired' or donation.pickup_deadline < now %}
+      <div class="alert alert-secondary"><strong>This listing has expired.</strong> The pickup deadline passed on {{ donation.pickup_deadline|dt }}, so it can no longer be requested.</div>
+    {% endif %}
+
+    <dl class="detail-list">
+      <dt>Donor</dt><dd>{{ donation.donor.display_name }} ({{ donation.donor.org_type or 'Donor' }})</dd>
+      <dt>Area</dt><dd>📍 {{ donation.city }}</dd>
+      <dt>Prepared / acquired</dt><dd>{{ donation.prepared_at|dt }}</dd>
+      <dt>Pickup deadline</dt><dd>{{ donation.pickup_deadline|dt }}{% if donation.pickup_deadline >= now %} <span class="text-success">({{ donation.pickup_deadline|timeleft }})</span>{% endif %}</dd>
+      <dt>Description</dt><dd>{{ donation.description or "—" }}</dd>
+      <dt>Handling / storage notes</dt><dd>{{ donation.handling_notes or "None provided" }}</dd>
+    </dl>
+
+    {% if mine and mine.contact_visible %}
+      <div class="alert alert-success">
+        <strong>Pickup details (shared because your request was approved)</strong><br>
+        Address: {{ donation.pickup_location }}<br>Contact: {{ donation.contact_phone }}
+      </div>
+    {% endif %}
+
+    {% if mine %}
+      <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>You have a request for this listing: {{ status_badge(mine.status) }}</span>
+        <a class="btn btn-sm btn-outline-success" href="{{ url_for('recipient.request_detail', request_id=mine.id) }}">Open my request</a>
+      </div>
+    {% endif %}
+
+    {% if donation.status == 'available' and donation.pickup_deadline > now and not mine %}
+      <h2 class="h5 mt-4">Request this food</h2>
+      <p class="small text-secondary">Make sure you can collect before the deadline and transport it safely. Pickup address and phone are shared after the donor approves.</p>
+      <form method="post" action="{{ url_for('recipient.request_food', donation_id=donation.id) }}" novalidate data-loading>
+        {{ form.hidden_tag() }}
+        {{ render_field(form.note, placeholder="e.g. We can collect within 2 hours with insulated containers.") }}
+        {{ form.submit(class="btn btn-success") }}
+      </form>
+    {% elif donation.status == 'requested' and not mine %}
+      <div class="alert alert-warning mt-3 mb-0">Another organization has already requested this listing. If it is declined it will become available again.</div>
+    {% elif donation.status == 'available' and mine and mine.status == 'cancelled' and donation.pickup_deadline > now %}
+      <p class="text-secondary">You cancelled an earlier request for this listing.</p>
+    {% endif %}
+
+    <hr>
+    <p class="small text-secondary mb-0">Always check packaging, labels and handling information at pickup. FoodBridge does not certify food safety.
+      <a href="{{ url_for('main.report', donation_id=donation.id) }}">Report an issue with this listing</a></p>
+  </div></div>
+</div>
+{% endblock %}

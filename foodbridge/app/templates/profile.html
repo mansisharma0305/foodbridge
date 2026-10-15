@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_field %}
+{% block title %}My profile{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+  <h1 class="h2">My profile</h1>
+  <p class="text-secondary">Signed in as <strong>{{ current_user.email }}</strong> ({{ current_user.role }}). Email cannot be changed.</p>
+  <div class="card"><div class="card-body">
+    <form method="post" novalidate data-loading>
+      {{ form.hidden_tag() }}
+      <div class="row">
+        <div class="col-md-6">{{ render_field(form.name) }}</div>
+        <div class="col-md-6">{{ render_field(form.organization) }}</div>
+        <div class="col-md-6">{{ render_field(form.org_type) }}</div>
+        <div class="col-md-6">{{ render_field(form.phone) }}</div>
+        <div class="col-md-6">{{ render_field(form.city) }}</div>
+        <div class="col-md-6">{{ render_field(form.address) }}</div>
+      </div>
+      {{ form.submit(class="btn btn-success") }}
+      <a class="btn btn-link" href="{{ url_for('main.change_password') }}">Change password</a>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

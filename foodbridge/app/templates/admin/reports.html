@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination, empty_state, status_badge %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="h2">Reported issues</h1>
+  <ul class="nav nav-pills mb-3">
+    {% for s in constants.REPORT_STATUSES %}<li class="nav-item"><a class="nav-link {{ 'active' if s == status }}" href="{{ url_for('admin.reports', status=s) }}">{{ s|status_label }}</a></li>{% endfor %}
+  </ul>
+  {% if pagination.items %}
+    {% for r in pagination.items %}
+    <div class="card mb-3"><div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between gap-2">
+        <div><strong>{{ r.category_label }}</strong> {{ status_badge(r.status) }}
+          <div class="small text-secondary">By {{ r.reporter.display_name }} ({{ r.reporter.email }}) · {{ r.created_at|dt }}
+          {% if r.donation %} · Listing #{{ r.donation.id }} “{{ r.donation.food_name }}”{% endif %}</div></div>
+      </div>
+      <p class="mt-2 mb-2">{{ r.description }}</p>
+      {% if r.status == 'open' %}
+      <form method="post" action="{{ url_for('admin.resolve_report', report_id=r.id) }}" class="row g-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="col-md-7"><label class="visually-hidden" for="note{{ r.id }}">Admin note</label><input class="form-control form-control-sm" id="note{{ r.id }}" name="admin_note" maxlength="500" placeholder="Admin note (optional)"></div>
+        <div class="col-auto"><button class="btn btn-sm btn-success" name="decision" value="resolved">Resolve</button>
+          <button class="btn btn-sm btn-outline-secondary" name="decision" value="dismissed">Dismiss</button></div>
+      </form>
+      {% else %}
+        <p class="small text-secondary mb-0">{{ r.status|status_label }} {{ r.resolved_at|dt }}{% if r.resolved_by %} by {{ r.resolved_by.name }}{% endif %}{% if r.admin_note %} — {{ r.admin_note }}{% endif %}</p>
+      {% endif %}
+    </div></div>
+    {% endfor %}
+    {{ render_pagination(pagination, 'admin.reports', query_args) }}
+  {% else %}{{ empty_state("No " ~ (status|status_label|lower) ~ " reports", "Nothing to review here.") }}{% endif %}
+</div>
+{% endblock %}

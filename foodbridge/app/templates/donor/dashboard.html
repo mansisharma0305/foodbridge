@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, sample_badge, post_button, stat_card, unit_list, render_pagination, empty_state %}
+{% block title %}Donor dashboard{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h1 class="h2 mb-0">Hello, {{ current_user.display_name }}</h1>
+      <p class="text-secondary mb-0">Manage your surplus food listings and the requests they receive.</p>
+    </div>
+    <a class="btn btn-success" href="{{ url_for('donor.new_donation') }}">+ Post surplus food</a>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">{{ stat_card(counts.total, "Total listings") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(counts.active, "Active listings") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(pending|length, "Requests to review", tone="amber") }}</div>
+    <div class="col-6 col-lg-3">{{ stat_card(counts.completed, "Completed donations") }}</div>
+  </div>
+
+  {% if pending %}
+  <div class="card mb-4 border-warning"><div class="card-body">
+    <h2 class="h5">Requests waiting for your decision</h2>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th scope="col">Food</th><th scope="col">Requested by</th><th scope="col">When</th><th scope="col">Message</th><th scope="col" class="text-end">Decision</th></tr></thead>
+        <tbody>
+        {% for r in pending %}
+          <tr>
+            <td><a href="{{ url_for('donor.donation_detail', donation_id=r.donation_id) }}">{{ r.donation.food_name }}</a><br><span class="small text-secondary">{{ r.donation.quantity|qty }} {{ r.donation.unit }}</span></td>
+            <td>{{ r.recipient.display_name }}<br><span class="small text-secondary">{{ r.recipient.org_type }}, {{ r.recipient.city }}</span></td>
+            <td class="small">{{ r.created_at|dt }}</td>
+            <td class="small">{{ r.note or "—" }}</td>
+            <td class="text-end text-nowrap">
+              {{ post_button(url_for('donor.request_action', request_id=r.id, action='approve'), 'Approve', 'btn btn-sm btn-success') }}
+              {{ post_button(url_for('donor.request_action', request_id=r.id, action='reject'), 'Reject', 'btn btn-sm btn-outline-danger', confirm='Reject this request? The listing will become available again.') }}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div></div>
+  {% endif %}
+
+  {% if approved or collected %}
+  <div class="card mb-4"><div class="card-body">
+    <h2 class="h5">Pickups in progress</h2>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th scope="col">Food</th><th scope="col">Recipient</th><th scope="col">Status</th><th scope="col">Deadline</th><th scope="col" class="text-end">Next step</th></tr></thead>
+        <tbody>
+        {% for r in approved + collected %}
+          <tr>
+            <td><a href="{{ url_for('donor.donation_detail', donation_id=r.donation_id) }}">{{ r.donation.food_name }}</a></td>
+            <td>{{ r.recipient.display_name }}<br><span class="small text-secondary">📞 {{ r.recipient.phone }}</span></td>
+            <td>{{ status_badge(r.status) }}</td>
+            <td class="small">{{ r.donation.pickup_deadline|dt }}<br><span class="text-secondary">{{ r.donation.pickup_deadline|timeleft }}</span></td>
+            <td class="text-end text-nowrap">
+              {% if r.status == 'approved' %}
+                {{ post_button(url_for('donor.request_action', request_id=r.id, action='collect'), 'Mark collected', 'btn btn-sm btn-success', confirm='Confirm the food has been handed over?') }}
+              {% else %}
+                {{ post_button(url_for('donor.request_action', request_id=r.id, action='complete'), 'Mark completed', 'btn btn-sm btn-success') }}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div></div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-9">
+      <div class="card"><div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+          <h2 class="h5 mb-0">My listings</h2>
+          <form method="get" class="d-flex gap-2" aria-label="Filter listings">
+            <label for="status" class="visually-hidden">Status</label>
+            <select name="status" id="status" class="form-select form-select-sm">
+              <option value="">All statuses</option>
+              {% for s in constants.DONATION_STATUSES %}<option value="{{ s }}" {{ 'selected' if s == status }}>{{ s|status_label }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-sm btn-outline-success">Filter</button>
+          </form>
+        </div>
+        {% if pagination.items %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th scope="col">Food</th><th scope="col">Quantity</th><th scope="col">Deadline</th><th scope="col">Status</th><th scope="col">Posted</th></tr></thead>
+            <tbody>
+            {% for d in pagination.items %}
+              <tr>
+                <td><a href="{{ url_for('donor.donation_detail', donation_id=d.id) }}">{{ d.food_name }}</a>{{ sample_badge(d) }}<br><span class="small text-secondary">{{ d.category }}</span></td>
+                <td>{{ d.quantity|qty }} {{ d.unit }}</td>
+                <td class="small">{{ d.pickup_deadline|dt }}</td>
+                <td>{{ status_badge(d.status) }}</td>
+                <td class="small">{{ d.created_at|dt }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {{ render_pagination(pagination, 'donor.dashboard', query_args) }}
+        {% else %}
+          {{ empty_state("No listings yet" if not status else "No listings with this status", "Post your first surplus food listing so nearby NGOs can request it.", url_for('donor.new_donation'), "Post surplus food") }}
+        {% endif %}
+      </div></div>
+    </div>
+    <div class="col-lg-3">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h6 text-uppercase text-secondary">Your impact</h2>
+        {{ unit_list(units, "Complete a donation to see your impact.") }}
+      </div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
